@@ -6,11 +6,15 @@
 
 <table>
   <tr>
-    <td width="50%">
-      <h3 align="center">移除水印后</h3>
+    <td width="33%">
+      <h3 align="center">快速移除</h3>
       <video src="https://github.com/user-attachments/assets/8cdc075e-7d15-4d04-8fa2-53dd287e5f4c" width="100%"></video>
     </td>
-    <td width="50%">
+    <td width="33%">
+      <h3 align="center">更好的移除效果</h3>
+      <video src="https://github.com/user-attachments/assets/4f032fc7-97da-471b-9a54-9de2a434fa57" width="100%"></video>
+    </td>
+       <td width="33%">
       <h3 align="center">原始视频</h3>
       <video src="https://github.com/user-attachments/assets/4f032fc7-97da-471b-9a54-9de2a434fa57" width="100%"></video>
     </td>
@@ -18,11 +22,14 @@
 </table>
 ⭐️: 
 
-1. **我们现在支持批量处理了。**
-2. **对于带用户名的新水印，Yolo 权重已更新** — 请尝试新版本的水印检测模型，效果会更好！
+- **我们提供了另一个模型，可以保持时间一致性，无闪烁！**
 
-3. **数据集已开源** — 我们已经将标注好的数据集上传到了 Hugging Face，查看[此数据集](https://huggingface.co/datasets/LLinked/sora-watermark-dataset)。欢迎训练你自己的检测模型或改进我们的模型！
-4. **一键便携版已发布** — [点击这里下载](#3-一键便携版)，Windows 用户无需安装即可使用！
+- **我们现在支持批量处理了。**
+- **对于带用户名的新水印，Yolo 权重已更新** — 请尝试新版本的水印检测模型，效果会更好！
+
+- **数据集已开源** — 我们已经将标注好的数据集上传到了 Hugging Face，查看[此数据集](https://huggingface.co/datasets/LLinked/sora-watermark-dataset)。欢迎训练你自己的检测模型或改进我们的模型！
+
+- **一键便携版已发布** — [点击这里下载](#3-一键便携版)，Windows 用户无需安装即可使用！
 
 ---
 
@@ -62,22 +69,22 @@ uv sync
 训练好的 YOLO 权重将存储在 `resources` 目录中，文件名为 `best.pt`。它将从 https://github.com/linkedlist771/SoraWatermarkCleaner/releases/download/V0.0.1/best.pt 自动下载。`Lama` 模型从 https://github.com/Sanster/models/releases/download/add_big_lama/big-lama.pt 下载，并将存储在 torch 缓存目录中。两者都是自动下载的，如果失败，请检查你的网络状态。
 
 3. 批量处理
-Use the cli.py for batch processing
+使用 cli.py 进行批量处理
 
 ```
 python cli.py [-h] -i INPUT -o OUTPUT [-p PATTERN] [--quiet]
 ```
 
-examples:
+示例：
 
 ```
-# Process all .mp4 files in input folder
+# 处理输入文件夹中的所有 .mp4 文件
 python batch_process.py -i /path/to/input -o /path/to/output
-# Process all .mov files
+# 处理所有 .mov 文件
 python batch_process.py -i /path/to/input -o /path/to/output --pattern "*.mov"
-# Process all video files (mp4, mov, avi)
+# 处理所有视频文件（mp4, mov, avi）
 python batch_process.py -i /path/to/input -o /path/to/output --pattern "*.{mp4,mov,avi}"
-# Without displaying the Tqdm bar inside sorawm procrssing.
+# 不显示 sorawm 处理过程中的 Tqdm 进度条
 python batch_process.py -i /path/to/input -o /path/to/output --quiet
 ```
 
@@ -106,29 +113,37 @@ python batch_process.py -i /path/to/input -o /path/to/output --quiet
 
 基本用法，只需尝试 `example.py`：
 
+> 我们提供了两个模型来移除水印。LAMA 速度快但在清理区域可能会有闪烁，而 E2FGVI_HQ 可以解决这个问题，但只在 CUDA 上运行，否则在 CPU 或 MPS 上会非常慢。
+
 ```python
-
 from pathlib import Path
-from sorawm.core import SoraWM
 
+from sorawm.core import SoraWM
+from sorawm.schemas import CleanerType
 
 if __name__ == "__main__":
-    input_video_path = Path(
-        "resources/dog_vs_sam.mp4"
-    )
-    output_video_path = Path("outputs/sora_watermark_removed.mp4")
-    sora_wm = SoraWM()
-    sora_wm.run(input_video_path, output_video_path)
+    input_video_path = Path("resources/dog_vs_sam.mp4")
+    output_video_path = Path("outputs/sora_watermark_removed")
+    
+    # 1. LAMA 速度快，质量好，但时间上不一致
+    sora_wm = SoraWM(cleaner_type=CleanerType.LAMA)
+    sora_wm.run(input_video_path, f"{output_video_path}_lama.mp4")
+    
+    # 2. E2FGVI_HQ 确保时间一致性，但在非 CUDA 设备上会非常慢
+    sora_wm = SoraWM(cleaner_type=CleanerType.E2FGVI_HQ)
+    sora_wm.run(input_video_path, f"{output_video_path}_e2fgvi_hq.mp4")
 
 ```
 
 我们还提供了基于 `streamlit` 的交互式网页界面，使用以下命令尝试：
 
+> 我们也在这里提供了切换选项。
+
 ```bash
 streamlit run app.py
 ```
 
-<img src="resources/app.png" style="zoom: 25%;" />
+<img src="assests/model_switch.png" style="zoom: 25%;" />
 
 现在也支持批量处理，你可以拖入一个文件夹或选择多个文件进行处理。
 <img src="assests/streamlit_batch.png" style="zoom: 50%;" />
@@ -140,25 +155,33 @@ streamlit run app.py
 
 只需运行：
 
-```python
+```
 python start_server.py
 ```
 
-Web 服务器将在端口 `5344` 启动，你可以查看 FastAPI [文档](http://localhost:5344/docs) 了解详情，有三个路由：
+Web 服务器将在端口 **5344** 启动。
 
-1. submit_remove_task:
+你可以查看 FastAPI [文档](http://localhost:5344/docs) 了解详情。
+
+有三个路由可用：
+
+1. **submit_remove_task**
 
    > 上传视频后，会返回一个任务 ID，该视频将立即被处理。
 
-   <img src="resources/53abf3fd-11a9-4dd7-a348-34920775f8ad.png" alt="image" style="zoom: 25%;" />
+<img src="resources/53abf3fd-11a9-4dd7-a348-34920775f8ad.png" alt="image" style="zoom: 25%;" />
 
-2. get_results:
+2. **get_results**
 
-你可以使用上面的任务 ID 检索任务状态，它会显示视频处理的百分比。一旦完成，返回的数据中会有下载 URL。
+你可以使用上面的任务 ID 检索任务状态。
 
-3. downlaod:
+它会显示视频处理完成的百分比。
 
-你可以使用第2步中的下载 URL 来获取清理后的视频。
+一旦完成，返回的数据中会包含一个**下载 URL**。
+
+3. **download**
+
+你可以使用第2步中的**下载 URL** 来获取清理后的视频。
 
 ## 6. 数据集
 
