@@ -40,6 +40,8 @@ This project provides an elegant way to remove the sora watermark in the sora2 g
 
 ⭐️: 
 
+- **I'm excited to release [DeMark-World](https://github.com/linkedlist771/DeMark-World) – to the best of my knowledge, the first model capable of removing any watermark from AI-generated videos.**
+
 - **We have provided another model which could preserve time consistency without flicker!**
 
 - **We support batch processing now.**
